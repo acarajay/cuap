@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    {{ headContent() }}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+
+    
+    <title>CUAP: Codon Usage Analysis Package</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <!--<link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet"> -->
+    <!--<link href="vendor/bootstrap/css/bootstrap.css" rel="stylesheet">-->
+
+    <!-- Custom fonts for this template -->
+    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    
+    <!--
+    <link href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+    <link href='https://fonts.googleapis.com/css?family=Cabin:700' rel='stylesheet' type='text/css'> -->
+    
+    <!-- Custom styles for this template -->
+    <link href="css/grayscale.min.css" rel="stylesheet">
+
+    <!-- Custom table style for this template --> 
+    <link rel="stylesheet" href="datatables/css/dataTables.bootstrap4.min.css"> 
+    <!--for abled/disabled radio button -->
+	<script>
+
+		window.onload=function() {
+
+	    // first, disable all the input fields
+	    document.forms[0].elements["sequence"].disabled=true;
+	    document.forms[0].elements["accessno"].disabled=true;
+	    document.forms[0].elements["inputfile"].disabled=true;
+
+	    // next, attach the click event handler to the radio buttons
+	    var radios = document.forms[0].elements["group1"];
+		    for (var i = [0]; i < radios.length; i++){
+		  		radios[i].onclick=radioClicked;
+	    	}
+			    
+		}
+
+			function radioClicked() {
+
+			  // find out which radio button was clicked and
+			  // disable/enable appropriate input elements
+			  switch(this.value) {
+			    case "one" :
+			       document.forms[0].elements["sequence"].disabled=false;
+			       document.forms[0].elements["accessno"].disabled=true;
+			       document.forms[0].elements["inputfile"].disabled=true;
+			       break;
+			    case "two" :
+			       document.forms[0].elements["accessno"].disabled=false;
+			       document.forms[0].elements["sequence"].disabled=true;
+			       document.forms[0].elements["inputfile"].disabled=true;
+			       break;
+			    case "three" :
+			       document.forms[0].elements["inputfile"].disabled=false;
+			       document.forms[0].elements["sequence"].disabled=true;
+			       document.forms[0].elements["accessno"].disabled=true;
+			       break;
+			  }
+			}
+
+
+			var valid = false;
+
+			function validate_fileupload(input_element)
+			{
+			    var el = document.getElementById("feedback");
+			    var fileName = input_element.value;
+			    var allowed_extensions = new Array("fasta","txt");
+			    var file_extension = fileName.split('.').pop(); 
+			    for(var i = 0; i < allowed_extensions.length; i++)
+			    {
+			        if(allowed_extensions[i]==file_extension)
+			        {
+			            valid = true; // valid file extension
+			            el.innerHTML = "";
+			            return;
+			        }
+			    }
+			    el.innerHTML="Invalid file";
+			    el.form.reset();
+	            el.focus();
+			    valid = false;
+
+			}
+
+			function ValidateInputForm(){
+				var sequence = document.getElementById("sequence");           
+				var accessno = document.getElementById("accessno");
+				var one = document.getElementById("one").checked;
+				var two = document.getElementById("two").checked;
+				var three = document.getElementById("three").checked;
+				var lines = sequence.value.split("\n");
+				var countseq = 0;
+				//var caps = sequence.toUppercase();
+
+				
+				//window.alert(caps.value);
+				//var pattern = document.getAttribute("pattern");
+				//var res = pattern.test(sequence.value);
+				//var res = pattern.test(sequence.value);
+				//window.alert(pattern.test(sequence.value));
+
+
+	    		if (sequence.value == "" && one == true){
+			        window.alert("Please enter your sequence(s).");
+			        sequence.focus();
+			        document.location.reload(true);
+			        return false;
+			    }
+
+			    if (sequence.value != "" && one == true){
+			        //window.alert(sequence.value);
+			        for(var j=0; j < lines.length; j++){
+			        	//window.alert("Line"+ j + "is : " + lines[j]);
+			        	
+			        	//window.alert(lines[j].indexOf(">"));
+			        	if (lines[j].indexOf(">",0) < 0){
+			        		//window.alert(lines[j] + ";= check if valid dna(ATGC)");
+			        		var dna = lines[j].split("");
+			        		/*for( var i=0; i < dna.length; i++){
+			        			if(dna[i]!= "A" || dna[i] != "T" || dna[i]!= "G" || dna[i] != "C" || dna[i]!= "a" || dna[i] != "t" || dna[i]!= "g" || dna[i] != "c"){
+			        				window.alert(dna[i]+"-");
+			        				//document.location.reload(true);
+			        				return false;
+			        			}
+			        		}*/
+			        		//window.alert(dna[1]);
+			        		
+			        	}else{
+			        		 countseq++;
+			        		 //window.alert("count is "+ countseq);
+			        	}
+
+			        }
+
+			        if(countseq > 0){
+			        	return true;
+			        } else {
+			        	window.alert("Enter DNA sequence(s) with annotation!");
+			        	sequence.focus();
+			        	document.location.reload(true);
+			        	return false;
+			        }
+			        //sequence.focus();
+			        //document.location.reload(true);
+			        //return false;
+			    }
+
+			    if (accessno.value == "" && two == true){
+			        window.alert("Please enter your accession number(s).");
+			        accessno.focus();
+			        document.location.reload(true);
+			        return false;
+			    }   
+	  			return true;
+			}
+						
+	</script>
+
+  </head>
+
+  <body id="page-top">
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+      <div class="container">
+        <a class="navbar-brand js-scroll-trigger" href="#page-top">Codon Usage Analysis Package<a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          Menu
+          <i class="fa fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link js-scroll-trigger" href="#about">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link js-scroll-trigger" href="#download">Input</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link js-scroll-trigger" href="#summary">Summary</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link js-scroll-trigger" href="#contact">Output</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link js-scroll-trigger" href="#plot">Plot</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Intro Header -->
+    <header class="masthead">
+      <div class="intro-body">
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-8 mx-auto">
+              <h1 class="brand-heading">CUAP</h1> 
+              <p class="intro-text">A program for the codon usage pattern of different genomes using Maximum Likelihood Estimator (MLE) index.
+                <br></p>
+              <a href="#about" class="btn btn-circle js-scroll-trigger">
+                <i class="fa fa-angle-double-down animated"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- About Section -->
+    <section id="about" class="content-section text-center">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+            <h2>About CUAP</h2>
+            <p>CUAP accepts one or more DNA sequences and returns the codon usage value using Maximum Likelihood Estimator (MLE).
+            </p>
+            <p>All DNA sequences inputted should be in the CDS (coding DNA sequence) form. CDS is the protein-encoding region of the genome.</p>
+            <p>The accession number(s) inputted should match with the accession number(s) of the DNA sequence with the database of 
+            <a href="https://www.ncbi.nlm.nih.gov/nucleotide/"> https://www.ncbi.nlm.nih.gov/nucleotide/ </a> <br>
+            The uploaded file of DNA sequences should be in FASTA format.
+            </p>
+            <a href="#download" class="btn btn-circle js-scroll-trigger">
+               <i class="fa fa-angle-double-down animated"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Download Section -->
+    <section id="download" class="download-section content-section text-center">
+      <div class="container">
+        <div class="col-lg-12 mx-auto"  >
+          <!--<h2>INPUT SEQUENCE</h2>
+          <p>You can download Grayscale for free on the preview page at Start Bootstrap.</p>
+          <a href="http://startbootstrap.com/template-overviews/grayscale/" class="btn btn-default btn-lg">Visit Download Page</a>-->
+          <form id="picker" name="InputForm" class="attr-col shiny-input-radiogroup" method="post" enctype="multipart/form-data">
+          	<div class="form-group" >
+          		<input id="one" type="radio" name="group1" value="one" />
+                <label for="sequence"> Enter Sequence(s):</label>
+                <textarea name="Sequences" id="sequence" pattern="[ATGCatgc]" rows="7" cols="25" class="form-control" placeholder="Enter one or multiple sequence(s)" required="required"></textarea>
+
+            </div>	
+            <div class="form-group">
+            	<input id="two" type="radio" name="group1" value="two" /> 
+                <label for="accessno"> Enter Accession Number(s):    </label>
+                <input type="text" class="form-control" id="accessno" name="AccessNo" placeholder="User can enter multiple accession number(s) such as: JX275887.1, DQ861409.1, DQ861408.1" required="required"  />
+            </div>
+			<div class="form-group">
+				<input id="three" type="radio" name="group1" value="three" />
+			    <label for="inputfile">Upload:</label>
+			    <!--<input id="inputfile" name="Inputfile" type="file" accept=".fasta,.txt" onchange="validate_fileupload(this)" class="file" data-show-preview="false">-->
+			 
+				<input type="file" id="inputfile" name="Inputfile" accept=".fasta,.txt" class="file">				 
+				
+			    <span id="feedback" style="color: red;"></span>
+			</div>
+			
+			<!--<p id="result"></p>-->
+			<span id="note" class="form-text text-white"> &emsp; &emsp; &emsp; &emsp; NOTE: Input should be in the CDS (coding DNA sequence) form.</span>
+			<a href="#download" class="btn js-scroll-trigger">
+				<button type="reset" id="form_reset" class="btn btn-default">Clear</button>
+			</a>
+			<a href="#summary" class="btn js-scroll-trigger">
+				<button type="submit" id="radio_value" onclick="ValidateInputForm()" class="btn btn-default">Submit</button>
+			</a>
+
+			</form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Summary Section -->
+    <div id="summary"  class="content-section text-center">
+    	<div class="container">
+	      <h3>SUMMARY OF DATA</h3>
+	      <div>  
+	      <!--{{verbatimTextOutput('sample')}}-->
+
+	      <!--{{verbatimTextOutput('summary')}}-->
+	      <!--{{verbatimTextOutput('accessnoOutput')}} -->
+	      {{dataTableOutput('sumofdata')}} 
+	      <!--{{textOutput('group')}}-->
+	      <!--{{verbatimTextOutput('sample')}}-->
+	      </div>
+	        <a href="#contact" class="btn btn-circle js-scroll-trigger">
+	            <i class="fa fa-angle-double-down animated"></i>
+	        </a>
+    	</div>
+    </div> 
+
+
+    <!-- Contact Section -->
+    <section id="contact" class="content-section text-center">
+      <div class="container">
+      	<h3> Codon Usage Table </h3>
+        <div >  <!--class="col-lg-10 mx-auto"-->
+        	{{dataTableOutput('codonusagetable')}} 
+        	<!--
+            <table id="example" class="table table-bordered table-responsive" width="100%">
+			  <thead class="mdb-color lighten-4">
+			    <tr>
+			      <th>AMINO ACID</th>
+			      <th>3-LETTER CODE</th>
+			      <th>1-LETTER CODE</th>
+			      <th>CODON</th>
+			      <th>IDENTIFIER</th>
+			      <th>CODON USAGE</th>
+			      <th>STANDARD ERROR</th>
+			    </tr>
+			  </thead>
+			  <tbody >
+			    <tr>
+			      <td>Alanine</td>
+			      <td>Ala</td>
+			      <td>A</td>
+			      <td>GCA</td>
+			      <td>ala1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Alanine</td>
+			      <td>Ala</td>
+			      <td>A</td>
+			      <td>GCC</td>
+			      <td>ala2</td>
+			      <td> </td>
+			      <td> </td>			      			 
+			    </tr>
+			    <tr>
+			      <td>Alanine</td>
+			      <td>Ala</td>
+			      <td>A</td>
+			      <td>GCG</td>
+			      <td>ala3</td>
+			      <td> </td>
+			      <td> </td>			     
+			    </tr>
+			    <tr>
+			      <td>Alanine</td>
+			      <td>Ala</td>
+			      <td>A</td>
+			      <td>GCT</td>
+			      <td>ala4</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			    <tr>
+			      <td>Arginine</td>
+			      <td>Arg</td>
+			      <td>R</td>
+			      <td>AGA</td>
+			      <td>arg1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Arginine</td>
+			      <td>Arg</td>
+			      <td>R</td>
+			      <td>AGG</td>
+			      <td>arg2</td>
+			      <td> </td>
+			      <td> </td>			      			 
+			    </tr>
+			    <tr>
+			      <td>Arginine</td>
+			      <td>Arg</td>
+			      <td>R</td>
+			      <td>CGA</td>
+			      <td>arg3</td>
+			      <td> </td>
+			      <td> </td>			     
+			    </tr>
+			    <tr>
+			      <td>Arginine</td>
+			      <td>Arg</td>
+			      <td>R</td>
+			      <td>CGC</td>
+			      <td>arg4</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Arginine</td>
+			      <td>Arg</td>
+			      <td>R</td>
+			      <td>CGG</td>
+			      <td>arg5</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Arginine</td>
+			      <td>Arg</td>
+			      <td>R</td>
+			      <td>CGT</td>
+			      <td>arg6</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Asparagine</td>
+			      <td>Asn</td>
+			      <td>N</td>
+			      <td>AAC</td>
+			      <td>asn1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Asparagine</td>
+			      <td>Asn</td>
+			      <td>N</td>
+			      <td>AAT</td>
+			      <td>asn2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Aspartic Acid</td>
+			      <td>Asp</td>
+			      <td>D</td>
+			      <td>GAC</td>
+			      <td>asp1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Aspartic Acid</td>
+			      <td>Asp</td>
+			      <td>D</td>
+			      <td>GAT</td>
+			      <td>asp2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Cysteine</td>
+			      <td>Cys</td>
+			      <td>C</td>
+			      <td>TGC</td>
+			      <td>cys1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Cysteine</td>
+			      <td>Cys</td>
+			      <td>C</td>
+			      <td>TGT</td>
+			      <td>cys2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Glutamine</td>
+			      <td>Gln</td>
+			      <td>Q</td>
+			      <td>CAA</td>
+			      <td>gln1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Glutamine</td>
+			      <td>Gln</td>
+			      <td>Q</td>
+			      <td>CAG</td>
+			      <td>gln2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Glutamic Acid</td>
+			      <td>Glu</td>
+			      <td>E</td>
+			      <td>GAA</td>
+			      <td>glu1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			   <tr>
+			   	  <td>Glutamic Acid</td>
+			      <td>Glu</td>
+			      <td>E</td>
+			      <td>GAG</td>
+			      <td>glu2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>	
+			    <tr>
+			      <td>Glycine</td>
+			      <td>Gly</td>
+			      <td>G</td>
+			      <td>GGA</td>
+			      <td>gly1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			   	<tr>
+			   	  <td>Glycine</td>
+			      <td>Gly</td>
+			      <td>G</td>
+			      <td>GGC</td>
+			      <td>gly2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>	 		    
+			   	<tr>
+			   	  <td>Glycine</td>
+			      <td>Gly</td>
+			      <td>G</td>
+			      <td>GGG</td>
+			      <td>gly3</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Glycine</td>
+			      <td>Gly</td>
+			      <td>G</td>
+			      <td>GGT</td>
+			      <td>gly4</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Histidine</td>
+			      <td>His</td>
+			      <td>H</td>
+			      <td>CAC</td>
+			      <td>his1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Histidine</td>
+			      <td>His</td>
+			      <td>H</td>
+			      <td>CAT</td>
+			      <td>his2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Isoleucine</td>
+			      <td>Ile</td>
+			      <td>I</td>
+			      <td>ATA</td>
+			      <td>ile1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Isoleucine</td>
+			      <td>Ile</td>
+			      <td>I</td>
+			      <td>ATC</td>
+			      <td>ile2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			   <tr>
+			   	  <td>Isoleucine</td>
+			      <td>Ile</td>
+			      <td>I</td>
+			      <td>ATT</td>
+			      <td>ile3</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Leucine</td>
+			      <td>Leu</td>
+			      <td>L</td>
+			      <td>CTA</td>
+			      <td>leu1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Leucine</td>
+			      <td>Leu</td>
+			      <td>L</td>
+			      <td>CTC</td>
+			      <td>leu2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Leucine</td>
+			      <td>Leu</td>
+			      <td>L</td>
+			      <td>CTG</td>
+			      <td>leu3</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Leucine</td>
+			      <td>Leu</td>
+			      <td>L</td>
+			      <td>CTT</td>
+			      <td>leu4</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Leucine</td>
+			      <td>Leu</td>
+			      <td>L</td>
+			      <td>TTA</td>
+			      <td>leu5</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Leucine</td>
+			      <td>Leu</td>
+			      <td>L</td>
+			      <td>TTG</td>
+			      <td>leu6</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Lysine</td>
+			      <td>Lys</td>
+			      <td>K</td>
+			      <td>AAA</td>
+			      <td>lys1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Lysine</td>
+			      <td>Lys</td>
+			      <td>K</td>
+			      <td>AAG</td>
+			      <td>lys2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Phenylalanine</td>
+			      <td>Phe</td>
+			      <td>F</td>
+			      <td>TTC</td>
+			      <td>phe1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Phenylalanine</td>
+			      <td>Phe</td>
+			      <td>F</td>
+			      <td>TTT</td>
+			      <td>phe2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Proline</td>
+			      <td>Pro</td>
+			      <td>P</td>
+			      <td>CCA</td>
+			      <td>pro1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Proline</td>
+			      <td>Pro</td>
+			      <td>P</td>
+			      <td>CCC</td>
+			      <td>pro2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Proline</td>
+			      <td>Pro</td>
+			      <td>P</td>
+			      <td>CCG</td>
+			      <td>pro3</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Proline</td>
+			      <td>Pro</td>
+			      <td>P</td>
+			      <td>CCT</td>
+			      <td>pro4</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Serine</td>
+			      <td>Ser</td>
+			      <td>S</td>
+			      <td>AGC</td>
+			      <td>ser1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Serine</td>
+			      <td>Ser</td>
+			      <td>S</td>
+			      <td>AGT</td>
+			      <td>ser2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Serine</td>
+			      <td>Ser</td>
+			      <td>S</td>
+			      <td>TCA</td>
+			      <td>ser3</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Serine</td>
+			      <td>Ser</td>
+			      <td>S</td>
+			      <td>TCC</td>
+			      <td>ser4</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Serine</td>
+			      <td>Ser</td>
+			      <td>S</td>
+			      <td>TCG</td>
+			      <td>ser5</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Serine</td>
+			      <td>Ser</td>
+			      <td>S</td>
+			      <td>TCT</td>
+			      <td>ser6</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Threonine</td>
+			      <td>Thr</td>
+			      <td>T</td>
+			      <td>ACA</td>
+			      <td>thr1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Threonine</td>
+			      <td>Thr</td>
+			      <td>T</td>
+			      <td>ACC</td>
+			      <td>thr2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Threonine</td>
+			      <td>Thr</td>
+			      <td>T</td>
+			      <td>ACG</td>
+			      <td>thr3</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Threonine</td>
+			      <td>Thr</td>
+			      <td>T</td>
+			      <td>ACT</td>
+			      <td>thr4</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Tyrosine</td>
+			      <td>Tyr</td>
+			      <td>Y</td>
+			      <td>TAC</td>
+			      <td>tyr1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Tyrosine</td>
+			      <td>Tyr</td>
+			      <td>Y</td>
+			      <td>TAT</td>
+			      <td>tyr2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Valine</td>
+			      <td>Val</td>
+			      <td>V</td>
+			      <td>GTA</td>
+			      <td>val1</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Valine</td>
+			      <td>Val</td>
+			      <td>V</td>
+			      <td>GTC</td>
+			      <td>val2</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Valine</td>
+			      <td>Val</td>
+			      <td>V</td>
+			      <td>GTG</td>
+			      <td>val3</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			    <tr>
+			      <td>Valine</td>
+			      <td>Val</td>
+			      <td>V</td>
+			      <td>GTT</td>
+			      <td>val4</td>
+			      <td> </td>
+			      <td> </td>
+			    </tr>
+			  </tbody>
+			</table>
+		-->
+        </div>
+      </div>
+     
+          <!--<div class="col-lg-10 mx-auto">
+            <h2>Contact Start Bootstrap</h2>
+            <p>Feel free to leave us a comment on the
+              <a href="http://startbootstrap.com/template-overviews/grayscale/">Grayscale template overview page</a>
+              on Start Bootstrap to give some feedback about this theme!</p>
+            <ul class="list-inline banner-social-buttons">
+              <li class="list-inline-item">
+                <a href="https://twitter.com/SBootstrap" class="btn btn-default btn-lg">
+                  <i class="fa fa-twitter fa-fw"></i>
+                  <span class="network-name">Twitter</span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="https://github.com/BlackrockDigital/startbootstrap" class="btn btn-default btn-lg">
+                  <i class="fa fa-github fa-fw"></i>
+                  <span class="network-name">Github</span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="https://plus.google.com/+Startbootstrap/posts" class="btn btn-default btn-lg">
+                  <i class="fa fa-google-plus fa-fw"></i>
+                  <span class="network-name">Google+</span>
+                </a>
+              </li>
+            </ul>
+
+          </div> -->
+
+      </div>
+    </section>
+
+    <!-- Map Section
+    <div id="map"></div>
+     -->
+
+
+    <!-- Plot Section -->
+    <div id="plot"  class="content-section text-center">
+      <p>PLOT OF DATA</p>
+      {{plotOutput('plot1')}}
+    </div> 
+
+    <!-- Footer -->
+    <footer>
+      <div class="container text-center">
+        <p>Copyright &copy; CUAP 2018</p>
+      </div>
+    </footer>
+
+    <!-- Bootstrap core JavaScript -->
+    <script> 
+		 $(document).ready(function() {
+		    $('#example').DataTable();
+		} );
+
+    </script>
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Bootstrap Table Javascript -->
+    <!--<script src="datatables/js/jquery.js"></script> -->
+    <!--<script src="vendor/jquery/jquery.js"></script> -->
+    <script src="datatables/js/jquery.dataTables.min.js"></script>
+    <script src="datatables/js/dataTables.bootstrap4.min.js"></script>
+
+
+    <!-- Plugin JavaScript  -->
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+    <!-- Google Maps API Key - Use your own API key to enable the map feature. More information on the Google Maps API can be found at https://developers.google.com/maps/ -->
+    <!--<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCRngKslUGJTlibkQ3FkfTxj3Xss1UlZDA&sensor=false"></script> -->
+
+    <!-- Custom scripts for this template -->
+    <script src="js/grayscale.min.js"></script>
+
+
+    	<!--- JQUERY for radio buttons ----->
+	<script type="text/javascript" src="js/radiobutton.js"></script>
+		<!-- JQuery for filestyle -->
+	<script type="text/javascript" src="js/bootstrap-filestyle.min.js"> </script>
+
+   
+
+  </body>
+
+</html>

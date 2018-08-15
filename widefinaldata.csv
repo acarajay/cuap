@@ -1,0 +1,7 @@
+"codon","aminoacid","freq"
+"ATG","M",1
+"CTC","L",2
+"GCC","A",1
+"GTG","V",1
+"GTT","V",1
+"TGC","C",1
